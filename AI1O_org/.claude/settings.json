@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Edit(output/**/*)",
+      "Write(output/**/*)",
+      "Bash(cd:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(pdftotext:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,4 @@
+spacy>=3.7.0
+ginza>=5.2.0
+ja-ginza>=5.2.0
+click>=8.0.0
