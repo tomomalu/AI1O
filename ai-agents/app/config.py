@@ -10,7 +10,7 @@ DEFAULT_CONFIG = {
     'APP_FOLDER_NAME': 'app',
     'AGENTS_FOLDER': '../agents',
     'UPLOAD_FOLDER': 'uploads',
-    'OUTPUT_FOLDER': 'output',
+    'OUTPUT_FOLDER': '../output',
     
     # サーバー設定
     'HOST': '127.0.0.1',
