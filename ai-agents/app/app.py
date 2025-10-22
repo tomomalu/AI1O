@@ -71,88 +71,64 @@ def get_available_agents():
     
     return agents
 
-def run_claude_agent(agent_type, prompt, input_files, output_path):
-    """Claude Codeエージェントを実行する（模擬実装）"""
-    global task_status
+def generate_claude_code_command(agent_type, prompt, input_files, output_path):
+    """Claude Codeで実行するためのコマンドを生成"""
     
-    try:
-        task_status['running'] = True
-        task_status['progress'] = 0
-        task_status['message'] = 'エージェントを初期化しています...'
-        
-        # 進捗状況を模擬
-        for i in range(0, 101, 10):
-            if i < 30:
-                task_status['message'] = f'ファイルを読み込んでいます... ({i}%)'
-            elif i < 60:
-                task_status['message'] = f'{agent_type}エージェントが分析中... ({i}%)'
-            elif i < 90:
-                task_status['message'] = f'結果を生成しています... ({i}%)'
+    # ファイルパスの処理
+    file_paths = []
+    if input_files:
+        for file in input_files:
+            if file.startswith('/'):
+                file_paths.append(file)  # 絶対パス
             else:
-                task_status['message'] = f'出力ファイルを作成中... ({i}%)'
-            
-            task_status['progress'] = i
-            time.sleep(0.5)  # 実際の処理をシミュレート
-        
-        # 結果ファイルを作成
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        result_dir = os.path.join(output_path, f'{agent_type}_{timestamp}')
-        os.makedirs(result_dir, exist_ok=True)
-        
-        # サンプル結果ファイルを作成
-        result_file = os.path.join(result_dir, 'result.md')
-        with open(result_file, 'w', encoding='utf-8') as f:
-            f.write(f"""# {agent_type}エージェント実行結果
+                file_paths.append(f"../uploads/{file}")  # アップロードファイル
+    
+    # プロンプトの整形
+    formatted_prompt = f"""以下のタスクを実行してください：
 
-## 実行時刻
-{datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')}
-
-## 使用エージェント
-{agent_type}
-
-## 入力ファイル
-{', '.join(input_files) if input_files else 'なし'}
-
-## プロンプト
 {prompt}
 
-## 実行結果
-{agent_type}エージェントが正常に実行されました。
+""" + (f"""
+参考ファイル:
+{chr(10).join(['- ' + fp for fp in file_paths])}
+""" if file_paths else "") + f"""
+出力先: {output_path}
 
-※ この出力は模擬実装です。実際のエージェント機能を実装するには、
-Claude Code APIとの連携が必要です。
-
-## 生成されたファイル
-- result.md (この ファイル)
-- analysis.json (分析結果)
-- output.txt (処理結果)
-""")
-        
-        # 追加のサンプルファイル
-        with open(os.path.join(result_dir, 'analysis.json'), 'w', encoding='utf-8') as f:
-            json.dump({
-                'agent': agent_type,
-                'status': 'completed',
-                'processing_time': '30 seconds',
-                'input_files_count': len(input_files) if input_files else 0,
-                'output_files': ['result.md', 'analysis.json', 'output.txt']
-            }, f, ensure_ascii=False, indent=2)
-        
-        with open(os.path.join(result_dir, 'output.txt'), 'w', encoding='utf-8') as f:
-            f.write(f'{agent_type}エージェントによる処理が完了しました。\n詳細な結果については、result.mdをご確認ください。')
-        
-        task_status['progress'] = 100
-        task_status['message'] = '処理が完了しました！'
-        task_status['result'] = {
-            'output_path': result_dir,
-            'files': ['result.md', 'analysis.json', 'output.txt']
-        }
-        
-    except Exception as e:
-        task_status['error'] = str(e)
-        task_status['message'] = f'エラーが発生しました: {str(e)}'
-    finally:
-        task_status['running'] = False
+よろしくお願いします。"""
+    
+    # Claude Codeコマンドの生成
+    command_parts = [
+        "Task tool:",
+        f"subagent_type: {agent_type}",
+        "",
+        "Prompt:",
+        f'"{formatted_prompt}"'
+    ]
+    
+    if file_paths:
+        command_parts.extend([
+            "",
+            "Input files:",
+            *[f"- {fp}" for fp in file_paths]
+        ])
+    
+    command_parts.extend([
+        "",
+        f"Output path: {output_path}",
+        "",
+        "💡 使い方:",
+        "1. 上記の内容をClaude Codeにコピペしてください",
+        "2. Task toolを使用してエージェントを実行してください", 
+        "3. 実行完了後、結果をこのアプリにアップロードしてください"
+    ])
+    
+    return {
+        'command': '\n'.join(command_parts),
+        'agent_type': agent_type,
+        'output_path': output_path,
+        'formatted_prompt': formatted_prompt,
+        'input_files': file_paths
+    }
 
 @app.route('/')
 def index():
@@ -187,9 +163,9 @@ def api_upload():
             'error': str(e)
         }), 500
 
-@app.route('/api/execute', methods=['POST'])
-def api_execute():
-    """エージェント実行API"""
+@app.route('/api/prepare', methods=['POST'])
+def api_prepare():
+    """Claude Code実行準備API"""
     try:
         data = request.json
         agent_type = data.get('agent')
@@ -197,22 +173,60 @@ def api_execute():
         input_files = data.get('input_files', [])
         output_path = data.get('output_path', app.config['OUTPUT_FOLDER'])
         
-        if task_status['running']:
+        if not agent_type:
             return jsonify({
                 'success': False,
-                'error': '既に実行中のタスクがあります'
+                'error': 'エージェントを選択してください'
+            }), 400
+            
+        if not prompt.strip():
+            return jsonify({
+                'success': False,
+                'error': 'プロンプトを入力してください'
             }), 400
         
-        # 非同期でエージェントを実行
-        thread = threading.Thread(
-            target=run_claude_agent,
-            args=(agent_type, prompt, input_files, output_path)
-        )
-        thread.start()
+        # Claude Codeコマンドを生成
+        command_data = generate_claude_code_command(agent_type, prompt, input_files, output_path)
         
         return jsonify({
             'success': True,
-            'message': 'エージェントの実行を開始しました'
+            'command_data': command_data
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/upload_result', methods=['POST'])
+def api_upload_result():
+    """実行結果アップロードAPI"""
+    try:
+        uploaded_files = []
+        output_folder = app.config['OUTPUT_FOLDER']
+        
+        # 結果ファイルを保存
+        for file in request.files.getlist('result_files'):
+            if file.filename:
+                # タイムスタンプ付きフォルダを作成
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                result_dir = os.path.join(output_folder, f'claude_code_result_{timestamp}')
+                os.makedirs(result_dir, exist_ok=True)
+                
+                filename = file.filename
+                filepath = os.path.join(result_dir, filename)
+                file.save(filepath)
+                uploaded_files.append({
+                    'filename': filename,
+                    'path': filepath,
+                    'size': os.path.getsize(filepath)
+                })
+        
+        return jsonify({
+            'success': True,
+            'uploaded_files': uploaded_files,
+            'result_folder': result_dir if uploaded_files else None
         })
         
     except Exception as e:

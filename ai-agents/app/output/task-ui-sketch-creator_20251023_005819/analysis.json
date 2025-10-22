@@ -1,0 +1,11 @@
+{
+  "agent": "task-ui-sketch-creator",
+  "status": "completed",
+  "processing_time": "30 seconds",
+  "input_files_count": 1,
+  "output_files": [
+    "result.md",
+    "analysis.json",
+    "output.txt"
+  ]
+}
