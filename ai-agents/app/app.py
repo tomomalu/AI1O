@@ -5,10 +5,11 @@ import subprocess
 import threading
 import time
 from datetime import datetime
+from config import CONFIG, AGENTS_FOLDER, APP_FOLDER_NAME, UPLOAD_FOLDER, OUTPUT_FOLDER, HOST, PORT, DEBUG
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['OUTPUT_FOLDER'] = 'output'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
 # グローバル変数でタスクの状態を管理
 task_status = {
@@ -21,7 +22,7 @@ task_status = {
 
 def get_available_agents():
     """利用可能なエージェント一覧を取得"""
-    agents_dir = os.path.join('..', 'agents')
+    agents_dir = AGENTS_FOLDER
     agents = []
     
     if os.path.exists(agents_dir):
@@ -239,13 +240,32 @@ def api_reset():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
+    # 現在のディレクトリを確認
+    current_dir = os.getcwd()
+    print(f"🔍 Current working directory: {current_dir}")
+    
+    # appディレクトリに移動（もし必要であれば）
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(current_dir) != APP_FOLDER_NAME:
+        print(f"📁 Changing to script directory: {script_dir}")
+        os.chdir(script_dir)
+    
     # 必要なディレクトリを作成
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
     
+    # agentsフォルダの存在確認
+    agents_dir = AGENTS_FOLDER
+    print(f"🔍 Checking agents directory: {os.path.abspath(agents_dir)}")
+    if os.path.exists(agents_dir):
+        agent_files = [f for f in os.listdir(agents_dir) if f.endswith('.md')]
+        print(f"✅ Found {len(agent_files)} agent files: {agent_files}")
+    else:
+        print(f"❌ Agents directory not found: {os.path.abspath(agents_dir)}")
+    
     print("🚀 AI1O Agent Web App starting...")
-    print("📍 URL: http://localhost:5001")
+    print(f"📍 URL: http://{HOST}:{PORT}")
     print("📁 Upload folder:", app.config['UPLOAD_FOLDER'])
     print("📁 Output folder:", app.config['OUTPUT_FOLDER'])
     
-    app.run(debug=True, host='127.0.0.1', port=5001)
+    app.run(debug=DEBUG, host=HOST, port=PORT)

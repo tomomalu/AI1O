@@ -3,7 +3,10 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(python3:*)",
-      "Bash(pip3 install:*)"
+      "Bash(pip3 install:*)",
+      "Read(//Volumes/SSD-PROJECT/**)",
+      "Bash(FLASK_APP=/Volumes/SSD-PROJECT/AI1O/ai-agents/app/app.py cd /Volumes/SSD-PROJECT/AI1O/ai-agents/app)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []
