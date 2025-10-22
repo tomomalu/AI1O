@@ -253,6 +253,86 @@ def api_reset():
     }
     return jsonify({'success': True})
 
+@app.route('/api/test_claude_code')
+def test_claude_code():
+    """Claude Codeコマンドライン availability test"""
+    try:
+        print("🧪 Testing Claude Code command line availability...")
+        
+        # Claude Codeが利用可能か確認
+        result = subprocess.run(['claude', '--help'], 
+                              capture_output=True, text=True, timeout=10)
+        
+        response_data = {
+            'available': result.returncode == 0,
+            'return_code': result.returncode,
+            'stdout': result.stdout,
+            'stderr': result.stderr,
+            'test_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        print(f"✅ Claude Code test result: {response_data['available']}")
+        
+        return jsonify(response_data)
+        
+    except FileNotFoundError as e:
+        print(f"❌ Claude Code not found: {e}")
+        return jsonify({
+            'available': False,
+            'error': 'claude command not found',
+            'details': str(e),
+            'suggestion': 'Claude Code might not be installed or not in PATH'
+        })
+    except subprocess.TimeoutExpired:
+        print("⏰ Claude Code test timeout")
+        return jsonify({
+            'available': False,
+            'error': 'Command timeout (>10s)',
+            'suggestion': 'Claude Code might be unresponsive'
+        })
+    except Exception as e:
+        print(f"💥 Unexpected error: {e}")
+        return jsonify({
+            'available': False,
+            'error': f'Unexpected error: {str(e)}',
+            'type': type(e).__name__
+        })
+
+@app.route('/api/claude_code_version')
+def claude_code_version():
+    """Claude Code version and config info"""
+    try:
+        # Version check
+        version_result = subprocess.run(['claude', '--version'], 
+                                      capture_output=True, text=True, timeout=5)
+        
+        # Config check (if available)
+        config_result = None
+        try:
+            config_result = subprocess.run(['claude', 'config', 'list'], 
+                                         capture_output=True, text=True, timeout=5)
+        except:
+            pass
+        
+        return jsonify({
+            'version': {
+                'success': version_result.returncode == 0,
+                'output': version_result.stdout,
+                'error': version_result.stderr
+            },
+            'config': {
+                'success': config_result.returncode == 0 if config_result else False,
+                'output': config_result.stdout if config_result else None,
+                'error': config_result.stderr if config_result else None
+            } if config_result else None
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'type': type(e).__name__
+        })
+
 if __name__ == '__main__':
     # 現在のディレクトリを確認
     current_dir = os.getcwd()
