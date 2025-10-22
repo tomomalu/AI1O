@@ -21,7 +21,7 @@ task_status = {
 
 def get_available_agents():
     """利用可能なエージェント一覧を取得"""
-    agents_dir = os.path.join('..', '.claude', 'agents')
+    agents_dir = os.path.join('..', 'agents')
     agents = []
     
     if os.path.exists(agents_dir):
@@ -32,17 +32,34 @@ def get_available_agents():
                 try:
                     with open(os.path.join(agents_dir, file), 'r', encoding='utf-8') as f:
                         content = f.read()
-                        # 最初の段落を説明として使用
-                        lines = content.split('\n')
                         description = ''
-                        for line in lines:
-                            if line.strip() and not line.startswith('#'):
-                                description = line.strip()
-                                break
+                        
+                        # YAMLフロントマターから説明を抽出
+                        if content.startswith('---'):
+                            lines = content.split('\n')
+                            for line in lines[1:]:
+                                if line.startswith('description:'):
+                                    description = line.replace('description:', '').strip()
+                                    break
+                                elif line.strip() == '---':
+                                    break
+                        
+                        # 説明が見つからない場合、最初の段落を使用
+                        if not description:
+                            lines = content.split('\n')
+                            for line in lines:
+                                if line.strip() and not line.startswith('#') and not line.startswith('---'):
+                                    description = line.strip()
+                                    break
+                        
+                        # 長すぎる場合は切り詰める
+                        if len(description) > 100:
+                            description = description[:100] + '...'
+                        
                         agents.append({
                             'name': agent_name,
                             'display_name': agent_name.replace('-', ' ').title(),
-                            'description': description[:100] + '...' if len(description) > 100 else description
+                            'description': description or 'エージェントの説明を読み込めませんでした'
                         })
                 except Exception as e:
                     agents.append({
@@ -227,8 +244,8 @@ if __name__ == '__main__':
     os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
     
     print("🚀 AI1O Agent Web App starting...")
-    print("📍 URL: http://localhost:5000")
+    print("📍 URL: http://localhost:5001")
     print("📁 Upload folder:", app.config['UPLOAD_FOLDER'])
     print("📁 Output folder:", app.config['OUTPUT_FOLDER'])
     
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=5001)
