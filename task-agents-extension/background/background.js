@@ -14,6 +14,15 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
+// 拡張機能アイコンクリック時の処理
+chrome.action.onClicked.addListener((tab) => {
+    console.log('Extension icon clicked');
+    // デフォルトは新しいタブで開く
+    chrome.tabs.create({
+        url: chrome.runtime.getURL('popup/popup.html')
+    });
+});
+
 // 右クリックメニューがクリックされた時の処理
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === 'taskAgents') {
@@ -25,6 +34,19 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 // Native Messaging - Chrome拡張 → Node.jsスクリプト通信
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.log('Background received message:', msg);
+    
+    // 別ウィンドウで開く処理
+    if (msg.action === "openInWindow") {
+        chrome.windows.create({
+            url: msg.url,
+            type: 'popup',
+            width: 900,
+            height: 700,
+            focused: true
+        });
+        sendResponse({ success: true });
+        return true;
+    }
     
     if (msg.action === "getFilePathFromNative" || msg.action === "getFolderPathFromNative" || msg.action === "getAgentsFromNative") {
         try {

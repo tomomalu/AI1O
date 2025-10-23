@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // ドラッグ&ドロップを設定
     setupDropZone();
     
+    // 保存された状態を復元
+    restoreState();
+    
     showStatus('エージェントを読み込み中...', 'info');
 });
 
@@ -166,6 +169,9 @@ function setupEventListeners() {
     
     // 出力先選択
     setupOutputSelection();
+    
+    // 別ウィンドウボタン
+    setupWindowButton();
 }
 
 // 出力先選択の設定
@@ -232,6 +238,84 @@ function updateOutputControls() {
     }
     
     updateSelectedOutputDisplay();
+}
+
+// 別ウィンドウボタンの設定
+function setupWindowButton() {
+    const windowBtn = document.getElementById('openInWindowBtn');
+    if (windowBtn) {
+        windowBtn.addEventListener('click', openInNewWindow);
+    }
+}
+
+// 別ウィンドウで開く
+async function openInNewWindow() {
+    try {
+        // 現在のページの状態を保存（選択されたエージェント、ファイル、プロンプトなど）
+        const currentState = {
+            selectedAgent: selectedAgent,
+            selectedFiles: selectedFiles,
+            outputPath: outputPath,
+            outputOption: outputOption,
+            promptValue: document.getElementById('promptInput').value
+        };
+        
+        // ローカルストレージに状態を保存
+        await chrome.storage.local.set({ 'taskAgentsState': currentState });
+        
+        // 新しいウィンドウを開く（background scriptに要求）
+        chrome.runtime.sendMessage({
+            action: 'openInWindow',
+            url: chrome.runtime.getURL('popup/popup.html')
+        });
+        
+        showStatus('別ウィンドウで開いています...', 'info');
+        
+    } catch (error) {
+        console.error('Error opening in new window:', error);
+        showStatus('別ウィンドウを開けませんでした', 'error');
+    }
+}
+
+// ページ読み込み時に保存された状態を復元
+async function restoreState() {
+    try {
+        const result = await chrome.storage.local.get(['taskAgentsState']);
+        if (result.taskAgentsState) {
+            const state = result.taskAgentsState;
+            
+            // 状態を復元
+            if (state.selectedAgent) {
+                // エージェントが読み込まれるまで待機
+                setTimeout(() => {
+                    selectAgent(state.selectedAgent);
+                }, 500);
+            }
+            
+            if (state.selectedFiles) {
+                selectedFiles = state.selectedFiles;
+                displaySelectedFiles();
+            }
+            
+            if (state.outputPath) {
+                outputPath = state.outputPath;
+            }
+            
+            if (state.outputOption) {
+                outputOption = state.outputOption;
+                updateOutputControls();
+            }
+            
+            if (state.promptValue) {
+                document.getElementById('promptInput').value = state.promptValue;
+            }
+            
+            // 状態をクリア
+            await chrome.storage.local.remove(['taskAgentsState']);
+        }
+    } catch (error) {
+        console.error('Error restoring state:', error);
+    }
 }
 
 // 出力フォルダ選択（Finder風UI）
