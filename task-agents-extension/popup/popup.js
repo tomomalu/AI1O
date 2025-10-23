@@ -4,13 +4,14 @@ let selectedAgent = null;
 let selectedFiles = [];
 let outputPath = null;
 let outputOption = 'same'; // デフォルトは「入力ファイルと同じフォルダ」
+let availableAgents = []; // 動的に読み込まれるエージェント一覧
 
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Task Agents Extension initialized');
     
-    // エージェントリストを生成
-    renderAgentList();
+    // エージェントリストを動的に読み込み
+    loadAgents();
     
     // イベントリスナーを設定
     setupEventListeners();
@@ -18,25 +19,100 @@ document.addEventListener('DOMContentLoaded', function() {
     // ドラッグ&ドロップを設定
     setupDropZone();
     
-    showStatus('エージェントを選択してください', 'info');
+    showStatus('エージェントを読み込み中...', 'info');
 });
+
+// エージェントを動的に読み込み
+async function loadAgents() {
+    try {
+        console.log('🤖 Loading agents from /Volumes/SSD-PROJECT/AI1O/agents...');
+        
+        // Native Messaging でエージェントを取得
+        const response = await chrome.runtime.sendMessage({
+            action: "getAgentsFromNative"
+        });
+        
+        console.log('Agents response:', response);
+        
+        if (response && response.success) {
+            availableAgents = response.agents;
+            console.log(`✅ Loaded ${availableAgents.length} agents:`, availableAgents);
+            renderAgentList();
+            showStatus(`${availableAgents.length}個のエージェントを読み込みました`, 'success');
+        } else {
+            console.error('❌ Failed to load agents:', response?.error);
+            // フォールバック: 静的エージェントを使用
+            loadFallbackAgents();
+            showStatus('エージェント読み込みに失敗。デフォルトエージェントを使用します。', 'warning');
+        }
+    } catch (error) {
+        console.error('💥 Error loading agents:', error);
+        // フォールバック: 静的エージェントを使用
+        loadFallbackAgents();
+        showStatus('エージェント読み込みエラー。デフォルトエージェントを使用します。', 'error');
+    }
+}
+
+// フォールバック用の静的エージェント
+function loadFallbackAgents() {
+    availableAgents = [
+        {
+            name: 'task-product-feature-doc-creator',
+            displayName: 'プロダクト機能ドキュメント作成',
+            description: '製品機能の企画書・仕様書を作成します',
+            template: `【機能名】機能の企画書を作成してください。
+
+機能の概要：
+- 
+
+開発期間：ヶ月
+プロジェクト体制：
+
+参考資料：
+- `,
+            type: 'fallback'
+        },
+        {
+            name: 'task-ui-sketch-creator',
+            displayName: 'UIスケッチ作成',
+            description: 'ユーザーインターフェースのスケッチを作成します',
+            template: `「【機能名】」機能のUIスケッチを作成してください。
+
+主要画面：
+- 
+- 
+- `,
+            type: 'fallback'
+        }
+    ];
+    renderAgentList();
+}
 
 // エージェントリストを表示
 function renderAgentList() {
     const agentList = document.getElementById('agentList');
-    const agents = getAvailableAgents();
+    
+    if (availableAgents.length === 0) {
+        agentList.innerHTML = '<div class="no-agents">エージェントが見つかりません</div>';
+        return;
+    }
     
     agentList.innerHTML = '';
     
-    agents.forEach(agent => {
+    availableAgents.forEach(agent => {
         const agentItem = document.createElement('div');
         agentItem.className = 'agent-item';
         agentItem.addEventListener('click', () => selectAgent(agent.name));
         
+        // エージェントタイプに応じてバッジを表示
+        const typeBadge = agent.type === 'folder' ? '📁' : 
+                         agent.type === 'file' ? '📄' : 
+                         '⚙️';
+        
         agentItem.innerHTML = `
             <input type="radio" name="agent" value="${agent.name}" class="agent-radio">
             <div class="agent-info">
-                <div class="agent-name">${agent.displayName}</div>
+                <div class="agent-name">${typeBadge} ${agent.displayName}</div>
                 <div class="agent-description">${agent.description}</div>
             </div>
         `;
@@ -61,10 +137,10 @@ function selectAgent(agentName) {
     document.querySelector(`input[value="${agentName}"]`).checked = true;
     
     // プロンプトテンプレートを自動入力
-    const template = getAgentTemplate(agentName);
-    if (template) {
-        document.getElementById('promptInput').value = template.template;
-        showStatus(`${template.displayName} を選択しました`, 'success');
+    const agent = availableAgents.find(a => a.name === agentName);
+    if (agent) {
+        document.getElementById('promptInput').value = agent.template;
+        showStatus(`${agent.displayName} を選択しました`, 'success');
     }
 }
 

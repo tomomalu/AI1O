@@ -280,6 +280,84 @@ function searchRecursiveFolder(dir, foldername, maxDepth) {
     return null;
 }
 
+// エージェントを検出・読み込みする
+function getAgents() {
+    console.error('🤖 Scanning for agents...');
+    
+    const agentsDir = '/Volumes/SSD-PROJECT/AI1O/agents';
+    const agents = [];
+    
+    try {
+        if (!fs.existsSync(agentsDir)) {
+            console.error(`❌ Agents directory not found: ${agentsDir}`);
+            return {
+                success: false,
+                error: `Agents directory not found: ${agentsDir}`,
+                agents: []
+            };
+        }
+        
+        const items = fs.readdirSync(agentsDir);
+        console.error(`📁 Found ${items.length} items in agents directory`);
+        
+        for (const item of items) {
+            const itemPath = path.join(agentsDir, item);
+            const stats = fs.statSync(itemPath);
+            
+            if (stats.isDirectory()) {
+                // フォルダベースエージェント
+                const readmePath = path.join(itemPath, 'README.md');
+                if (fs.existsSync(readmePath)) {
+                    try {
+                        const content = fs.readFileSync(readmePath, 'utf8');
+                        agents.push({
+                            name: item,
+                            displayName: item.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                            description: `${item} エージェント`,
+                            template: content,
+                            type: 'folder'
+                        });
+                        console.error(`✅ Loaded folder agent: ${item}`);
+                    } catch (error) {
+                        console.error(`❌ Error reading ${readmePath}: ${error.message}`);
+                    }
+                }
+            } else if (item.endsWith('.md')) {
+                // ファイルベースエージェント
+                try {
+                    const content = fs.readFileSync(itemPath, 'utf8');
+                    const agentName = item.replace('.md', '');
+                    agents.push({
+                        name: agentName,
+                        displayName: agentName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                        description: `${agentName} エージェント`,
+                        template: content,
+                        type: 'file'
+                    });
+                    console.error(`✅ Loaded file agent: ${agentName}`);
+                } catch (error) {
+                    console.error(`❌ Error reading ${itemPath}: ${error.message}`);
+                }
+            }
+        }
+        
+        console.error(`🎯 Successfully loaded ${agents.length} agents`);
+        return {
+            success: true,
+            agents: agents,
+            count: agents.length
+        };
+        
+    } catch (error) {
+        console.error(`💥 Error scanning agents directory: ${error.message}`);
+        return {
+            success: false,
+            error: error.message,
+            agents: []
+        };
+    }
+}
+
 // ---- メインループ ----
 // 起動ログをファイルにも記録
 const logFile = '/tmp/native-host.log';
@@ -302,6 +380,10 @@ try {
     } else if (msg.action === 'getFolderPath') {
       const result = findFolderPath(msg.foldername);
       fs.appendFileSync(logFile, `📤 Folder result: ${JSON.stringify(result)}\n`);
+      sendMessage(result);
+    } else if (msg.action === 'getAgents') {
+      const result = getAgents();
+      fs.appendFileSync(logFile, `🤖 Agents result: ${JSON.stringify(result)}\n`);
       sendMessage(result);
     } else {
       const errorResponse = {

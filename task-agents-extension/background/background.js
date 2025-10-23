@@ -26,7 +26,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.log('Background received message:', msg);
     
-    if (msg.action === "getFilePathFromNative" || msg.action === "getFolderPathFromNative") {
+    if (msg.action === "getFilePathFromNative" || msg.action === "getFolderPathFromNative" || msg.action === "getAgentsFromNative") {
         try {
             console.log("Attempting to connect to native host...");
             const port = chrome.runtime.connectNative("com.taskagents.pathhost");
@@ -50,6 +50,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                 message = {
                     action: 'getFolderPath',
                     foldername: msg.foldername
+                };
+            } else if (msg.action === "getAgentsFromNative") {
+                console.log("Getting agents from directory");
+                message = {
+                    action: 'getAgents'
                 };
             }
             console.log("Sending message to native host:", message);
