@@ -6,7 +6,8 @@
   "permissions": [
     "storage",
     "contextMenus",
-    "activeTab"
+    "activeTab",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "file:///*"

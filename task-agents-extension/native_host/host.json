@@ -1,0 +1,9 @@
+{
+  "name": "com.taskagents.pathhost",
+  "description": "Task Agents file path resolution host",
+  "path": "/Volumes/SSD-PROJECT/AI1O/task-agents-extension/native_host/host.js",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://nclgbckkofpapllppogfpmleeeaoplph/"
+  ]
+}

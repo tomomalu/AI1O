@@ -130,10 +130,32 @@ async function selectFiles() {
 
 // ファイルのフルパスを取得
 async function getFileFullPath(fileHandle, file) {
-    // Chrome拡張機能でも完全なパス取得は制限されている
-    // ユーザーに手動でパスを入力してもらうため、ファイル名のみ返す
     console.log('Selected file:', file.name, 'Size:', file.size);
-    return `📁 ${file.name} (手動でパスを入力してください)`;
+    
+    try {
+        console.log('Sending message to background:', file.name);
+        
+        // Native Messaging でファイルパスを取得
+        const response = await chrome.runtime.sendMessage({
+            action: "getFilePathFromNative",
+            filename: file.name
+        });
+        
+        console.log('Native messaging response:', response);
+        
+        if (response && response.success) {
+            showStatus(`ファイルパスを自動取得しました: ${file.name}`, 'success');
+            return response.path;
+        } else {
+            console.warn('Native messaging failed:', response?.error);
+            showStatus(`ファイルパス自動取得に失敗: ${file.name}`, 'warning');
+            return `📁 ${file.name} (手動でパスを入力してください)`;
+        }
+    } catch (error) {
+        console.error('Native messaging error:', error);
+        showStatus(`ファイルパス取得エラー: ${file.name}`, 'warning');
+        return `📁 ${file.name} (手動でパスを入力してください)`;
+    }
 }
 
 // 選択されたファイルを表示
@@ -206,9 +228,32 @@ function setupDropZone() {
 
 // ファイルから推測パスを生成
 async function generatePathFromFile(file) {
-    // ドラッグ&ドロップでも完全なパス取得は不可
-    // ユーザーに手動でパスを入力してもらう
-    return `📁 ${file.name} (手動でパスを入力してください)`;
+    console.log('Dropped file:', file.name, 'Size:', file.size);
+    
+    try {
+        console.log('Sending message to background for dropped file:', file.name);
+        
+        // Native Messaging でファイルパスを取得
+        const response = await chrome.runtime.sendMessage({
+            action: "getFilePathFromNative",
+            filename: file.name
+        });
+        
+        console.log('Native messaging response for dropped file:', response);
+        
+        if (response && response.success) {
+            showStatus(`ドロップファイルのパスを自動取得しました: ${file.name}`, 'success');
+            return response.path;
+        } else {
+            console.warn('Native messaging failed for dropped file:', response?.error);
+            showStatus(`ドロップファイルのパス自動取得に失敗: ${file.name}`, 'warning');
+            return `📁 ${file.name} (手動でパスを入力してください)`;
+        }
+    } catch (error) {
+        console.error('Native messaging error for dropped file:', error);
+        showStatus(`ドロップファイルのパス取得エラー: ${file.name}`, 'warning');
+        return `📁 ${file.name} (手動でパスを入力してください)`;
+    }
 }
 
 // 手動パス追加

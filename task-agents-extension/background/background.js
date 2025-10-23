@@ -1,4 +1,7 @@
-// Task Agents Chrome Extension - Background Script
+// Task Agents Chrome Extension - Background Script with Native Messaging
+
+console.log('Task Agents Extension installed');
+console.log('Extension ID:', chrome.runtime.id);
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log('Task Agents Extension installed');
@@ -19,21 +22,61 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     }
 });
 
-// 拡張機能アイコンがクリックされた時の処理
-chrome.action.onClicked.addListener((tab) => {
-    // manifest.jsonでdefault_popupが設定されているため、
-    // この処理は通常実行されない
-    console.log('Extension icon clicked');
-});
-
-// メッセージ処理（将来の機能拡張用）
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log('Background received message:', request);
+// Native Messaging - Chrome拡張 → Node.jsスクリプト通信
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    console.log('Background received message:', msg);
     
-    switch (request.action) {
+    if (msg.action === "getFilePathFromNative") {
+        try {
+            console.log("Attempting to connect to native host...");
+            const port = chrome.runtime.connectNative("com.taskagents.pathhost");
+            console.log("Port created:", port);
+            
+            const message = { 
+                action: 'getFilePath',
+                filename: msg.filename,
+                searchPaths: msg.searchPaths || [
+                    '/Users/tomomalu/Desktop',
+                    '/Users/tomomalu/Downloads',
+                    '/Users/tomomalu/Documents',
+                    '/Volumes/SSD-PROJECT/AI1O/task-agents/output',
+                    '/Volumes/SSD-PROJECT/AI1O/project'
+                ]
+            };
+            console.log("Sending message to native host:", message);
+            port.postMessage(message);
+            
+            port.onMessage.addListener(response => {
+                console.log("Nativeからの応答:", response);
+                sendResponse(response);
+            });
+            
+            port.onDisconnect.addListener(() => {
+                console.log("Native接続終了");
+                if (chrome.runtime.lastError) {
+                    console.error("Native messaging error:", chrome.runtime.lastError);
+                    sendResponse({ 
+                        success: false, 
+                        error: chrome.runtime.lastError.message 
+                    });
+                }
+            });
+            
+            return true; // async応答
+        } catch (error) {
+            console.error("Native messaging failed:", error);
+            sendResponse({ 
+                success: false, 
+                error: error.message 
+            });
+        }
+    }
+    
+    // 既存のメッセージ処理
+    switch (msg.action) {
         case 'saveCommand':
             // コマンド履歴を保存
-            saveCommandHistory(request.data);
+            saveCommandHistory(msg.data);
             sendResponse({success: true});
             break;
         
@@ -45,24 +88,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; // 非同期レスポンス
         
         default:
-            sendResponse({success: false, error: 'Unknown action'});
+            if (msg.action !== "getFilePathFromNative") {
+                sendResponse({success: false, error: 'Unknown action'});
+            }
     }
 });
 
-// コマンド履歴を保存
+// 既存の関数（コマンド履歴保存など）
 async function saveCommandHistory(commandData) {
     try {
         const result = await chrome.storage.local.get(['commandHistory']);
         const history = result.commandHistory || [];
         
-        // 新しいコマンドを追加
         history.unshift({
             ...commandData,
             timestamp: Date.now(),
             id: generateId()
         });
         
-        // 最大50件まで保持
         if (history.length > 50) {
             history.splice(50);
         }
@@ -74,7 +117,6 @@ async function saveCommandHistory(commandData) {
     }
 }
 
-// コマンド履歴を取得
 async function getCommandHistory() {
     try {
         const result = await chrome.storage.local.get(['commandHistory']);
@@ -85,26 +127,6 @@ async function getCommandHistory() {
     }
 }
 
-// ユニークIDを生成
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-// 設定の保存/読み込み
-async function saveSetting(key, value) {
-    try {
-        await chrome.storage.local.set({[key]: value});
-    } catch (error) {
-        console.error('Failed to save setting:', error);
-    }
-}
-
-async function getSetting(key, defaultValue = null) {
-    try {
-        const result = await chrome.storage.local.get([key]);
-        return result[key] !== undefined ? result[key] : defaultValue;
-    } catch (error) {
-        console.error('Failed to get setting:', error);
-        return defaultValue;
-    }
 }

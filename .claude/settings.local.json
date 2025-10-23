@@ -8,18 +8,27 @@
       "Bash(kill:*)",
       "Read(//Users/tomomalu/.claude/**)",
       "Bash(/usr/bin/afplay:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(node:*)",
+      "Bash(cat:*)",
+      "Read(//Users/tomomalu/Library/**)",
+      "Bash(/Volumes/SSD-PROJECT/AI1O/task-agents-extension/native_host/host.js)",
+      "Bash(xxd:*)",
+      "Read(//Users/tomomalu/**)",
+      "Read(//Volumes/SSD-PROJECT/**)"
     ],
     "deny": [],
     "ask": []
   },
   "hooks": {
-    "PostToolUse": [
+    "Stop": [
       {
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "/usr/bin/afplay --volume 0.3 /System/Library/Sounds/Glass.aiff"
+            "command": "afplay /System/Library/Sounds/Glass.aiff"
           }
         ]
       }
