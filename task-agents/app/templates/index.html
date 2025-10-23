@@ -60,16 +60,26 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="fileInput" class="form-label">ファイルをアップロード:</label>
-                            <input class="form-control" type="file" id="fileInput" multiple 
-                                   accept=".txt,.md,.pdf,.docx,.json,.csv">
-                            <div class="form-text">複数ファイルを選択可能です</div>
+                            <label for="folderPath" class="form-label">ファイル・フォルダパスを指定:</label>
+                            <input type="text" class="form-control" id="folderPath" 
+                                   placeholder="例: /Volumes/SSD-PROJECT/AI1O/task-agents/output/ui-sketch-creator/20251023_AI-error-resolver/ASCII.md">
+                            <div class="form-text">絶対パスでファイルまたはフォルダを指定してください</div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="folderPath" class="form-label">または、フォルダパスを指定:</label>
-                            <input type="text" class="form-control" id="folderPath" 
-                                   placeholder="例: /path/to/folder">
+                            <label for="fileInput" class="form-label">または、ファイル選択でパスを確認:</label>
+                            <input class="form-control" type="file" id="fileInput" multiple 
+                                   accept=".txt,.md,.pdf,.docx,.json,.csv">
+                            <div class="form-text">ファイルを選択して名前を確認後、上の欄に絶対パスを入力してください</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">または、ファイルをドラッグ&ドロップ:</label>
+                            <div id="dropZone" class="border border-2 border-dashed rounded p-4 text-center" 
+                                 style="min-height: 100px; background-color: #f8f9fa;">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-0">ファイルをここにドロップしてパスを取得</p>
+                            </div>
                         </div>
 
                         <!-- Uploaded Files List -->

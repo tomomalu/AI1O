@@ -144,7 +144,9 @@ def generate_claude_code_command(agent_type, prompt, input_files, output_path):
             if file.startswith('/'):
                 file_paths.append(file)  # 絶対パス
             else:
-                file_paths.append(f"../uploads/{file}")  # アップロードファイル
+                # アップロードファイルも絶対パスで出力
+                upload_folder_abs = os.path.abspath(UPLOAD_FOLDER)
+                file_paths.append(os.path.join(upload_folder_abs, file))
     
     # プロンプトの整形
     formatted_prompt = f"""以下のタスクを実行してください：

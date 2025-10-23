@@ -3,6 +3,85 @@
 let uploadedFiles = [];
 let currentCommandData = null;
 
+// エージェント別プロンプトテンプレート
+const agentPromptTemplates = {
+    'task-product-feature-doc-creator': `【機能名】機能の企画書を作成してください。
+
+機能の概要：
+- 
+
+開発期間：ヶ月
+プロジェクト体制：
+
+参考資料：
+- `,
+    
+    'task-ui-sketch-creator': `「【機能名】」機能のUIスケッチを作成してください。
+
+主要画面：
+- 
+- 
+- 
+
+ターゲットユーザー：
+要件：
+- `,
+    
+    'task-ui-wireframe-creator': `「【機能名】」機能のワイヤーフレームを作成してください。
+
+画面仕様：
+- 
+- 
+
+機能要件：
+- 
+- 
+
+デザイン要件：
+- `,
+    
+    'ui-sketch-creator': `「【機能名】」機能のUIスケッチを作成してください。
+
+主要画面：
+- 
+- 
+- 
+
+ターゲットユーザー：
+要件：
+- `,
+    
+    'job-customer-success': `カスタマーサクセス業務について以下の内容でサポートしてください：
+
+課題・目標：
+
+
+顧客情報：
+- 
+
+実施項目：
+- `,
+    
+    'job-field-sales': `フィールドセールス業務について以下の内容でサポートしてください：
+
+営業目標：
+
+
+ターゲット顧客：
+- 
+
+アプローチ方法：
+- `,
+    
+    'ui-sketch-json-creator': `ASCIIワイヤーフレームをJSONに変換してください。
+
+既存のASCIIファイル：
+
+対象機能：
+変換要件：
+- `
+};
+
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('AI1O Agent Web App initialized (Copy/Paste Mode)');
@@ -10,42 +89,199 @@ document.addEventListener('DOMContentLoaded', function() {
     // ファイルアップロードのイベントリスナー
     document.getElementById('fileInput').addEventListener('change', handleFileUpload);
     
+    // エージェント選択のイベントリスナー（radio buttonに対応）
+    const agentRadios = document.querySelectorAll('input[name="agent"]');
+    agentRadios.forEach(radio => {
+        radio.addEventListener('change', handleAgentSelection);
+    });
+    
+    // ドラッグ&ドロップのイベントリスナー
+    setupDropZone();
+    
     // 初期状態を設定
     updateStatus('waiting', 'エージェントを選択して「実行準備」をクリックしてください');
 });
 
-// ファイルアップロード処理
-async function handleFileUpload() {
+// エージェント選択時の処理
+function handleAgentSelection() {
+    const promptTextarea = document.getElementById('promptInput');
+    const selectedRadio = document.querySelector('input[name="agent"]:checked');
+    const selectedAgent = selectedRadio ? selectedRadio.value : null;
+    
+    if (selectedAgent && agentPromptTemplates[selectedAgent]) {
+        // プロンプトテンプレートを自動入力
+        promptTextarea.value = agentPromptTemplates[selectedAgent];
+        console.log(`Agent template loaded: ${selectedAgent}`);
+    } else if (!selectedAgent) {
+        // エージェント未選択時はクリア
+        promptTextarea.value = '';
+    } else {
+        // テンプレートが見つからない場合はデフォルトメッセージ
+        promptTextarea.value = 'エージェントに実行してほしい内容を詳しく入力してください...';
+    }
+}
+
+// ファイル選択処理（パス確認用）
+function handleFileUpload() {
     const fileInput = document.getElementById('fileInput');
     const files = fileInput.files;
     
-    if (files.length === 0) return;
+    if (files.length === 0) {
+        // ファイル選択をクリアした場合
+        uploadedFiles = [];
+        displayUploadedFiles();
+        return;
+    }
     
-    const formData = new FormData();
+    // 選択されたファイル名を表示（パス入力の参考用）
+    uploadedFiles = [];
+    
     for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]);
+        const file = files[i];
+        // ファイル名のみ表示（ユーザーがパスを手動入力する参考用）
+        uploadedFiles.push(`📝 ${file.name} → 上のパス欄に絶対パスを入力`);
     }
     
-    try {
-        showMessage('ファイルをアップロード中...', 'info');
+    displayUploadedFiles();
+    showMessage(`${files.length}個のファイルを選択しました。上のパス指定欄に絶対パスを入力してください`, 'info');
+}
+
+// ドラッグ&ドロップゾーンのセットアップ
+function setupDropZone() {
+    const dropZone = document.getElementById('dropZone');
+    const folderPathInput = document.getElementById('folderPath');
+    
+    if (!dropZone) return;
+    
+    // ドラッグオーバー時の処理
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.backgroundColor = '#e3f2fd';
+        dropZone.style.borderColor = '#2196f3';
+    });
+    
+    // ドラッグリーブ時の処理
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.style.backgroundColor = '#f8f9fa';
+        dropZone.style.borderColor = '#dee2e6';
+    });
+    
+    // ドロップ時の処理
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
+        // スタイルをリセット
+        dropZone.style.backgroundColor = '#f8f9fa';
+        dropZone.style.borderColor = '#dee2e6';
         
-        const result = await response.json();
+        const files = e.dataTransfer.files;
         
-        if (result.success) {
-            uploadedFiles = result.files;
+        if (files.length > 0) {
+            const file = files[0]; // 最初のファイルを処理
+            
+            // ファイルパスの取得・推測を試行
+            let filePath = '';
+            
+            // デバッグ情報をコンソールに出力
+            console.log('File details:', {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                lastModified: new Date(file.lastModified),
+                webkitRelativePath: file.webkitRelativePath,
+                path: file.path
+            });
+            
+            // 様々な方法でパス取得を試行
+            if (file.path) {
+                // Electronアプリの場合
+                filePath = file.path;
+            } else if (file.webkitRelativePath) {
+                // webkitRelativePathがある場合
+                filePath = file.webkitRelativePath;
+            } else if (e.dataTransfer && e.dataTransfer.items) {
+                // DataTransferItemからパスを試行取得
+                const item = e.dataTransfer.items[0];
+                console.log('DataTransfer item:', item);
+                
+                if (item.webkitGetAsEntry) {
+                    const entry = item.webkitGetAsEntry();
+                    console.log('File entry:', entry);
+                    if (entry && entry.fullPath) {
+                        // fullPathが完全パスでない場合（/filename.mdのような場合）は推測パスを使用
+                        if (entry.fullPath.split('/').length <= 2) {
+                            console.log('Partial path detected:', entry.fullPath);
+                            filePath = ''; // 推測パス生成に回す
+                        } else {
+                            filePath = entry.fullPath;
+                        }
+                    }
+                }
+            }
+            
+            // パスが取得できない場合、ファイル名と属性から推測パスを生成
+            if (!filePath || filePath === file.name || filePath.startsWith('/') && filePath.split('/').length <= 2) {
+                console.log('Generating possible paths for:', file.name);
+                filePath = generatePossiblePaths(file);
+                console.log('Generated path:', filePath);
+            }
+            
+            // パス入力欄に設定
+            if (filePath && (filePath.startsWith('/') || filePath.includes(':'))) {
+                folderPathInput.value = filePath;
+                showMessage('ファイルパスを取得しました！', 'success');
+            } else {
+                // フルパスが取得できない場合は、ファイル名だけ表示してクリア
+                folderPathInput.value = '';
+                showMessage(`${file.name} をドロップしました。上の欄に正確なフルパスを手動入力してください`, 'info');
+            }
+            
+            // 選択ファイル表示も更新（パス入力欄の値を使用）
+            const displayPath = folderPathInput.value || `🎯 ${file.name}`;
+            uploadedFiles = [displayPath];
             displayUploadedFiles();
-            showMessage(`${result.files.length}個のファイルをアップロードしました`, 'success');
-        } else {
-            showMessage(`アップロードエラー: ${result.error}`, 'danger');
         }
-    } catch (error) {
-        showMessage(`アップロードエラー: ${error.message}`, 'danger');
+    });
+}
+
+// ファイル情報から推測可能なパスを生成
+function generatePossiblePaths(file) {
+    const fileName = file.name;
+    const fileExt = fileName.split('.').pop().toLowerCase();
+    
+    // よくあるパスパターンを推測
+    const commonPaths = [
+        `/Users/${getUserName()}/Desktop/${fileName}`,
+        `/Users/${getUserName()}/Downloads/${fileName}`,
+        `/Users/${getUserName()}/Documents/${fileName}`,
+        `/Volumes/SSD-PROJECT/AI1O/task-agents/output/ui-sketch-creator/20251023_AI-error-resolver/${fileName}`,
+        `/Volumes/SSD-PROJECT/AI1O/task-agents/output/ui-sketch-json-creator/20251023_AI-error-resolver/${fileName}`,
+        `/Volumes/SSD-PROJECT/AI1O/project/AIエラー解決/${fileName}`
+    ];
+    
+    // 拡張子に基づいた推測
+    if (fileExt === 'md') {
+        commonPaths.unshift(
+            `/Volumes/SSD-PROJECT/AI1O/task-agents/output/ui-sketch-creator/20251023_AI-error-resolver/${fileName}`,
+            `/Volumes/SSD-PROJECT/AI1O/project/AIエラー解決/${fileName}`
+        );
+    } else if (fileExt === 'json') {
+        commonPaths.unshift(
+            `/Volumes/SSD-PROJECT/AI1O/task-agents/output/ui-sketch-json-creator/20251023_AI-error-resolver/${fileName}`
+        );
     }
+    
+    return commonPaths[0]; // 最も可能性の高いパスを返す
+}
+
+// ユーザー名を推測（環境変数やブラウザ情報から）
+function getUserName() {
+    // macOSでよくあるユーザー名パターン
+    return 'tomomalu'; // 実際のユーザー名に基づいて設定
 }
 
 // アップロードされたファイルを表示
