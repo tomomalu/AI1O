@@ -5,9 +5,24 @@
       "Bash(python3:*)",
       "Read(//Users/tomomalu/Desktop/**)",
       "Bash(lsof:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Read(//Users/tomomalu/.claude/**)",
+      "Bash(/usr/bin/afplay:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/afplay --volume 0.3 /System/Library/Sounds/Glass.aiff"
+          }
+        ]
+      }
+    ]
   }
 }

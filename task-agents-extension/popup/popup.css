@@ -1,0 +1,359 @@
+/* Task Agents Chrome Extension Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 400px;
+    min-height: 600px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    background: #f8f9fa;
+}
+
+.container {
+    padding: 16px;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+}
+
+.header h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.header p {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+/* Sections */
+.section {
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #495057;
+}
+
+/* Agent List */
+.agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.agent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.agent-item:hover {
+    background: #f8f9fa;
+    border-color: #6c757d;
+}
+
+.agent-item.selected {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.agent-radio {
+    margin-top: 2px;
+}
+
+.agent-info {
+    flex: 1;
+}
+
+.agent-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.agent-description {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+/* File Selection */
+.file-selection {
+    margin-bottom: 12px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+}
+
+.btn-copy {
+    background: #6c757d;
+    color: white;
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+.btn-copy:hover {
+    background: #5a6268;
+}
+
+/* Drop Zone */
+.drop-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.3s;
+    background: #f8f9fa;
+}
+
+.drop-zone.drag-over {
+    border-color: #007bff;
+    background: #e3f2fd;
+}
+
+.drop-zone-content .icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.drop-zone-content p {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* Selected Files */
+.selected-files {
+    margin-top: 12px;
+}
+
+/* Manual Path Input */
+.manual-path {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.manual-path label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.path-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.path-input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 12px;
+    min-width: 0; /* flexboxで幅が縮むように */
+}
+
+.path-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.manual-path .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: #e8f5e8;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.file-path {
+    flex: 1;
+    word-break: break-all;
+    color: #155724;
+}
+
+.file-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+/* Prompt Input */
+.prompt-input {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.prompt-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+/* Command Output */
+.command-output {
+    margin-top: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.command-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.command-text {
+    padding: 12px;
+    margin: 0;
+    font-size: 11px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    line-height: 1.4;
+    background: #f8f9fa;
+    color: #495057;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Status */
+.status {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.status.show {
+    opacity: 1;
+}
+
+.status.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

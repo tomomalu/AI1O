@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Agents</title>
+    <link href="popup.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 Task Agents</h1>
+            <p>Claude Code エージェント実行支援</p>
+        </div>
+
+        <!-- Agent Selection -->
+        <div class="section">
+            <h3>📋 1. エージェント選択</h3>
+            <div id="agentList" class="agent-list">
+                <!-- エージェントリストが動的に生成される -->
+            </div>
+        </div>
+
+        <!-- File Selection -->
+        <div class="section">
+            <h3>📁 2. ファイル選択</h3>
+            <div class="file-selection">
+                <button id="selectFileBtn" class="btn btn-primary">
+                    📂 ファイルを選択
+                </button>
+                <div id="selectedFiles" class="selected-files"></div>
+            </div>
+            
+            <!-- Drop Zone -->
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-zone-content">
+                    <i class="icon">📥</i>
+                    <p>ファイルをドロップまたは<br>上のボタンで選択</p>
+                </div>
+            </div>
+            
+            <!-- Manual Path Input -->
+            <div class="manual-path">
+                <label for="manualPath">📝 ファイルパスを手動入力:</label>
+                <div class="path-input-group">
+                    <input type="text" id="manualPath" class="path-input" 
+                           placeholder="例: /Users/tomomalu/Desktop/myfile.md">
+                    <button id="addPathBtn" class="btn btn-primary">追加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt Input -->
+        <div class="section">
+            <h3>✏️ 3. プロンプト入力</h3>
+            <textarea id="promptInput" class="prompt-input" 
+                      placeholder="エージェントを選択するとテンプレートが自動入力されます..."></textarea>
+        </div>
+
+        <!-- Command Generation -->
+        <div class="section">
+            <h3>⚡ 4. 実行コマンド</h3>
+            <button id="generateBtn" class="btn btn-success">
+                🚀 コマンド生成
+            </button>
+            <div id="commandOutput" class="command-output" style="display: none;">
+                <div class="command-header">
+                    <span>Claude Code コマンド:</span>
+                    <button id="copyBtn" class="btn btn-copy">📋 コピー</button>
+                </div>
+                <pre id="commandText" class="command-text"></pre>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="../agents/agent-templates.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>
