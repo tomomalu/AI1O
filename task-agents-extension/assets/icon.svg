@@ -1,0 +1,28 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#667eea" stroke="#4f46e5" stroke-width="8"/>
+  
+  <!-- Robot head -->
+  <circle cx="64" cy="50" r="25" fill="white"/>
+  
+  <!-- Eyes -->
+  <circle cx="56" cy="45" r="4" fill="#4f46e5"/>
+  <circle cx="72" cy="45" r="4" fill="#4f46e5"/>
+  
+  <!-- Mouth -->
+  <path d="M 54 58 Q 64 65 74 58" stroke="#4f46e5" stroke-width="2" fill="none"/>
+  
+  <!-- Body -->
+  <rect x="45" y="75" width="38" height="25" rx="5" fill="white"/>
+  
+  <!-- Arms -->
+  <circle cx="35" cy="85" r="8" fill="white"/>
+  <circle cx="93" cy="85" r="8" fill="white"/>
+  
+  <!-- Gears -->
+  <circle cx="56" cy="85" r="3" fill="#4f46e5"/>
+  <circle cx="72" cy="85" r="3" fill="#4f46e5"/>
+  
+  <!-- Text -->
+  <text x="64" y="115" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">TASK</text>
+</svg>

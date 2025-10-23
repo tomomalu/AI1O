@@ -1,0 +1,4 @@
+task-ui-sketch-creatorエージェントによる処理が完了しました。
+詳細な結果については、result.mdをご確認ください。
+
+【このファイルは app/output から ai-agents/output に移動されました】

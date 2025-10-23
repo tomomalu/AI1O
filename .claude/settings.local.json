@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv:*)",
+      "Bash(python3:*)",
+      "Read(//Users/tomomalu/Desktop/**)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Read(//Users/tomomalu/.claude/**)",
+      "Bash(/usr/bin/afplay:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(node:*)",
+      "Bash(cat:*)",
+      "Read(//Users/tomomalu/Library/**)",
+      "Bash(/Volumes/SSD-PROJECT/AI1O/task-agents-extension/native_host/host.js)",
+      "Bash(xxd:*)",
+      "Read(//Users/tomomalu/**)",
+      "Read(//Volumes/SSD-PROJECT/**)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Glass.aiff"
+          }
+        ]
+      }
+    ]
+  }
+}

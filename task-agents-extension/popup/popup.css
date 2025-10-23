@@ -1,0 +1,773 @@
+/* Task Agents Chrome Extension Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    background: #f8f9fa;
+    overflow-x: hidden;
+}
+
+.container {
+    padding: 0;
+}
+
+/* Header */
+.header {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-text {
+    text-align: center;
+    flex: 1;
+}
+
+.header h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.header p {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+/* Window Button */
+.window-btn {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.window-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.window-btn:active {
+    transform: translateY(0);
+}
+
+/* Tab Navigation */
+.tab-nav {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+    color: #007bff;
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    background: rgba(0, 123, 255, 0.1);
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Sections */
+.section {
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #495057;
+}
+
+/* Agent List */
+.agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.agent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.agent-item:hover {
+    background: #f8f9fa;
+    border-color: #6c757d;
+}
+
+.agent-item.selected {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.agent-radio {
+    margin-top: 2px;
+}
+
+.agent-info {
+    flex: 1;
+}
+
+.agent-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.agent-description {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+/* File Selection */
+.file-selection {
+    margin-bottom: 12px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+}
+
+.btn-copy {
+    background: #6c757d;
+    color: white;
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+.btn-copy:hover {
+    background: #5a6268;
+}
+
+/* Drop Zone */
+.drop-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.3s;
+    background: #f8f9fa;
+}
+
+.drop-zone.drag-over {
+    border-color: #007bff;
+    background: #e3f2fd;
+}
+
+.drop-zone-content .icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.drop-zone-content p {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* Selected Files */
+.selected-files {
+    margin-top: 12px;
+}
+
+/* Manual Path Input */
+.manual-path {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.manual-path label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.path-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.path-input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 12px;
+    min-width: 0; /* flexboxで幅が縮むように */
+}
+
+.path-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.manual-path .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: #e8f5e8;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.file-path {
+    flex: 1;
+    word-break: break-all;
+    color: #155724;
+}
+
+.file-remove {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+/* Prompt Input */
+.prompt-input {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.prompt-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+/* Command Output */
+.command-output {
+    margin-top: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.command-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.command-text {
+    padding: 12px;
+    margin: 0;
+    font-size: 11px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    line-height: 1.4;
+    background: #f8f9fa;
+    color: #495057;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Status */
+.status {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.status.show {
+    opacity: 1;
+}
+
+.status.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Output Path Selection */
+.output-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.output-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.radio-option:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.radio-option input[type="radio"] {
+    margin: 0;
+}
+
+.radio-option input[type="radio"]:checked + .radio-text {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+    background: #e7f1ff;
+    border-color: #007bff;
+}
+
+.radio-text {
+    font-size: 13px;
+    color: #495057;
+    transition: all 0.2s;
+}
+
+.output-controls {
+    margin-top: 8px;
+}
+
+.manual-output-path {
+    margin-top: 8px;
+}
+
+.selected-output {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #e8f5e8;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #155724;
+    word-break: break-all;
+}
+
+.selected-output:empty {
+    display: none;
+}
+
+/* History List */
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-item {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.history-info {
+    flex: 1;
+}
+
+.history-date {
+    font-size: 11px;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.history-agent {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.history-files {
+    font-size: 12px;
+    color: #007bff;
+}
+
+.history-prompt {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    max-height: 3.6em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.history-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.history-actions .btn {
+    padding: 6px 12px;
+    font-size: 11px;
+}
+
+.no-history {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.no-history p {
+    margin-bottom: 8px;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    margin: auto;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.close-btn:hover {
+    background: #f8f9fa;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.detail-section {
+    margin-bottom: 20px;
+}
+
+.detail-section h5 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.detail-content {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.detail-files {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.detail-files li {
+    padding: 6px 12px;
+    background: #e7f1ff;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.detail-command {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* 詳細モーダル用の追加スタイル */
+.file-detail {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.file-path {
+    font-size: 11px;
+    color: #6c757d;
+    margin-bottom: 2px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+.file-size {
+    font-size: 10px;
+    color: #6c757d;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+.prompt-detail {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    margin: 0;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.command-detail {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.btn-small {
+    font-size: 11px;
+    padding: 6px 12px;
+}
+
+/* 履歴詳細の改善 */
+.history-details {
+    margin-bottom: 12px;
+}
