@@ -7,7 +7,8 @@ import time
 from datetime import datetime
 from config import CONFIG, AGENTS_FOLDER, APP_FOLDER_NAME, UPLOAD_FOLDER, OUTPUT_FOLDER, HOST, PORT, DEBUG
 
-app = Flask(__name__)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=os.path.join(script_dir, 'templates'))
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 
@@ -26,47 +27,109 @@ def get_available_agents():
     agents = []
     
     if os.path.exists(agents_dir):
-        for file in os.listdir(agents_dir):
-            if file.endswith('.md') and not file.startswith('templates'):
-                agent_name = file.replace('.md', '')
-                # エージェントファイルから説明を抽出
-                try:
-                    with open(os.path.join(agents_dir, file), 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        description = ''
-                        
-                        # YAMLフロントマターから説明を抽出
-                        if content.startswith('---'):
-                            lines = content.split('\n')
-                            for line in lines[1:]:
-                                if line.startswith('description:'):
-                                    description = line.replace('description:', '').strip()
-                                    break
-                                elif line.strip() == '---':
-                                    break
-                        
-                        # 説明が見つからない場合、最初の段落を使用
-                        if not description:
-                            lines = content.split('\n')
-                            for line in lines:
-                                if line.strip() and not line.startswith('#') and not line.startswith('---'):
-                                    description = line.strip()
-                                    break
-                        
-                        # 長すぎる場合は切り詰める
-                        if len(description) > 100:
-                            description = description[:100] + '...'
-                        
+        processed_folders = set()
+        
+        for root, dirs, files in os.walk(agents_dir):
+            # templatesフォルダをスキップ
+            if 'templates' in root:
+                continue
+                
+            relative_path = os.path.relpath(root, agents_dir)
+            md_files = [f for f in files if f.endswith('.md') and not f.startswith('templates')]
+            
+            if not md_files:
+                continue
+                
+            # フォルダ内に複数のmdファイルがある場合は結合、単一ファイルの場合はそのまま
+            if relative_path == '.':
+                # ルートディレクトリの場合は個別ファイルとして処理
+                for file in md_files:
+                    agent_name = file.replace('.md', '')
+                    file_path = os.path.join(root, file)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            description = ''
+                            
+                            # YAMLフロントマターから説明を抽出
+                            if content.startswith('---'):
+                                lines = content.split('\n')
+                                for line in lines[1:]:
+                                    if line.startswith('description:'):
+                                        description = line.replace('description:', '').strip()
+                                        break
+                                    elif line.strip() == '---':
+                                        break
+                            
+                            # 説明が見つからない場合、最初の段落を使用
+                            if not description:
+                                lines = content.split('\n')
+                                for line in lines:
+                                    if line.strip() and not line.startswith('#') and not line.startswith('---'):
+                                        description = line.strip()
+                                        break
+                            
+                            # 長すぎる場合は切り詰める
+                            if len(description) > 100:
+                                description = description[:100] + '...'
+                            
+                            agents.append({
+                                'name': agent_name,
+                                'display_name': agent_name.replace('-', ' ').title(),
+                                'description': description or 'エージェントの説明を読み込めませんでした'
+                            })
+                    except Exception as e:
                         agents.append({
                             'name': agent_name,
                             'display_name': agent_name.replace('-', ' ').title(),
-                            'description': description or 'エージェントの説明を読み込めませんでした'
+                            'description': 'エージェントの説明を読み込めませんでした'
                         })
-                except Exception as e:
+            else:
+                # サブフォルダの場合は全mdファイルを結合して1つのエージェントとして処理
+                if relative_path not in processed_folders:
+                    processed_folders.add(relative_path)
+                    agent_name = relative_path
+                    
+                    # ファイル名順ソート（readme.mdを最初に、数字プレフィックス優先）
+                    def sort_key(filename):
+                        if filename.lower() == 'readme.md':
+                            return '00_readme'
+                        return filename
+                    
+                    sorted_files = sorted(md_files, key=sort_key)
+                    
+                    # 全mdファイルの内容を結合
+                    combined_content = ""
+                    first_description = ""
+                    
+                    for file in sorted_files:
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8') as f:
+                                file_content = f.read()
+                                combined_content += f"\n\n# {file}\n\n{file_content}"
+                                
+                                # 最初のファイルの説明を取得
+                                if not first_description and file_content.startswith('---'):
+                                    lines = file_content.split('\n')
+                                    for line in lines[1:]:
+                                        if line.startswith('description:'):
+                                            first_description = line.replace('description:', '').strip()
+                                            break
+                                        elif line.strip() == '---':
+                                            break
+                        except Exception as e:
+                            combined_content += f"\n\n# {file}\n\nファイル読み込みエラー: {e}"
+                    
+                    # 長すぎる場合は切り詰める
+                    if len(first_description) > 100:
+                        first_description = first_description[:100] + '...'
+                    
                     agents.append({
                         'name': agent_name,
                         'display_name': agent_name.replace('-', ' ').title(),
-                        'description': 'エージェントの説明を読み込めませんでした'
+                        'description': first_description or f'{len(sorted_files)}個のファイルを含むエージェント',
+                        'content': combined_content
                     })
     
     return agents
@@ -253,85 +316,6 @@ def api_reset():
     }
     return jsonify({'success': True})
 
-@app.route('/api/test_claude_code')
-def test_claude_code():
-    """Claude Codeコマンドライン availability test"""
-    try:
-        print("🧪 Testing Claude Code command line availability...")
-        
-        # Claude Codeが利用可能か確認
-        result = subprocess.run(['claude', '--help'], 
-                              capture_output=True, text=True, timeout=10)
-        
-        response_data = {
-            'available': result.returncode == 0,
-            'return_code': result.returncode,
-            'stdout': result.stdout,
-            'stderr': result.stderr,
-            'test_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        print(f"✅ Claude Code test result: {response_data['available']}")
-        
-        return jsonify(response_data)
-        
-    except FileNotFoundError as e:
-        print(f"❌ Claude Code not found: {e}")
-        return jsonify({
-            'available': False,
-            'error': 'claude command not found',
-            'details': str(e),
-            'suggestion': 'Claude Code might not be installed or not in PATH'
-        })
-    except subprocess.TimeoutExpired:
-        print("⏰ Claude Code test timeout")
-        return jsonify({
-            'available': False,
-            'error': 'Command timeout (>10s)',
-            'suggestion': 'Claude Code might be unresponsive'
-        })
-    except Exception as e:
-        print(f"💥 Unexpected error: {e}")
-        return jsonify({
-            'available': False,
-            'error': f'Unexpected error: {str(e)}',
-            'type': type(e).__name__
-        })
-
-@app.route('/api/claude_code_version')
-def claude_code_version():
-    """Claude Code version and config info"""
-    try:
-        # Version check
-        version_result = subprocess.run(['claude', '--version'], 
-                                      capture_output=True, text=True, timeout=5)
-        
-        # Config check (if available)
-        config_result = None
-        try:
-            config_result = subprocess.run(['claude', 'config', 'list'], 
-                                         capture_output=True, text=True, timeout=5)
-        except:
-            pass
-        
-        return jsonify({
-            'version': {
-                'success': version_result.returncode == 0,
-                'output': version_result.stdout,
-                'error': version_result.stderr
-            },
-            'config': {
-                'success': config_result.returncode == 0 if config_result else False,
-                'output': config_result.stdout if config_result else None,
-                'error': config_result.stderr if config_result else None
-            } if config_result else None
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'type': type(e).__name__
-        })
 
 if __name__ == '__main__':
     # 現在のディレクトリを確認
@@ -352,7 +336,13 @@ if __name__ == '__main__':
     agents_dir = AGENTS_FOLDER
     print(f"🔍 Checking agents directory: {os.path.abspath(agents_dir)}")
     if os.path.exists(agents_dir):
-        agent_files = [f for f in os.listdir(agents_dir) if f.endswith('.md')]
+        agent_files = []
+        for root, dirs, files in os.walk(agents_dir):
+            if 'templates' in root:
+                continue
+            for file in files:
+                if file.endswith('.md') and not file.startswith('templates'):
+                    agent_files.append(file)
         print(f"✅ Found {len(agent_files)} agent files: {agent_files}")
     else:
         print(f"❌ Agents directory not found: {os.path.abspath(agents_dir)}")
