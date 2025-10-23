@@ -6,6 +6,32 @@ let outputPath = null;
 let outputOption = 'same'; // デフォルトは「入力ファイルと同じフォルダ」
 let availableAgents = []; // 動的に読み込まれるエージェント一覧
 
+// 履歴管理用の変数
+let executionHistory = [];
+const MAX_HISTORY_ITEMS = 50; // 最大保存件数
+
+// 履歴データ構造定義
+function createHistoryItem(agent, files, prompt, outputPath, outputOption, generatedCommand) {
+    return {
+        id: `history_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        agent: {
+            name: agent.name,
+            displayName: agent.displayName,
+            description: agent.description
+        },
+        files: files.map(file => ({
+            name: file.name,
+            path: file.path,
+            size: file.size
+        })),
+        prompt: prompt,
+        outputPath: outputPath,
+        outputOption: outputOption,
+        generatedCommand: generatedCommand
+    };
+}
+
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Task Agents Extension initialized');
@@ -21,6 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 保存された状態を復元
     restoreState();
+    
+    // 履歴を読み込み
+    loadExecutionHistory();
     
     showStatus('エージェントを読み込み中...', 'info');
 });
@@ -150,6 +179,9 @@ function selectAgent(agentName) {
 
 // イベントリスナー設定
 function setupEventListeners() {
+    // タブ切り替え
+    setupTabNavigation();
+    
     // ファイル選択ボタン
     document.getElementById('selectFileBtn').addEventListener('click', async (e) => {
         e.preventDefault();
@@ -172,6 +204,9 @@ function setupEventListeners() {
     
     // 別ウィンドウボタン
     setupWindowButton();
+    
+    // 履歴関連
+    setupHistoryEventListeners();
 }
 
 // 出力先選択の設定
@@ -887,6 +922,12 @@ function generateCommand() {
     document.getElementById('commandText').textContent = command;
     document.getElementById('commandOutput').style.display = 'block';
     
+    // 履歴に保存
+    const agent = availableAgents.find(a => a.name === selectedAgent);
+    if (agent) {
+        saveToHistory(agent, selectedFiles, prompt, finalOutputPath, outputOption, command);
+    }
+    
     showStatus('コマンドを生成しました！', 'success');
 }
 
@@ -912,6 +953,314 @@ function showStatus(message, type = 'info') {
     setTimeout(() => {
         status.classList.remove('show');
     }, 3000);
+}
+
+// タブナビゲーション設定
+function setupTabNavigation() {
+    const agentTab = document.getElementById('agentTab');
+    const historyTab = document.getElementById('historyTab');
+    const agentContent = document.getElementById('agentContent');
+    const historyContent = document.getElementById('historyContent');
+    
+    agentTab.addEventListener('click', () => {
+        switchTab('agent', agentTab, historyTab, agentContent, historyContent);
+    });
+    
+    historyTab.addEventListener('click', () => {
+        switchTab('history', agentTab, historyTab, agentContent, historyContent);
+        loadHistoryList(); // 履歴タブを開く時に履歴を更新
+    });
+}
+
+// タブ切り替え
+function switchTab(activeTab, agentTab, historyTab, agentContent, historyContent) {
+    // タブボタンの状態を更新
+    agentTab.classList.remove('active');
+    historyTab.classList.remove('active');
+    
+    // コンテンツの状態を更新
+    agentContent.classList.remove('active');
+    historyContent.classList.remove('active');
+    
+    if (activeTab === 'agent') {
+        agentTab.classList.add('active');
+        agentContent.classList.add('active');
+    } else {
+        historyTab.classList.add('active');
+        historyContent.classList.add('active');
+    }
+}
+
+// 履歴関連のイベントリスナー設定
+function setupHistoryEventListeners() {
+    // 詳細モーダルの閉じるボタン
+    const closeDetailModal = document.getElementById('closeDetailModal');
+    const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
+    const historyDetailModal = document.getElementById('historyDetailModal');
+    
+    if (closeDetailModal) {
+        closeDetailModal.addEventListener('click', () => {
+            historyDetailModal.style.display = 'none';
+        });
+    }
+    
+    if (closeDetailModalBtn) {
+        closeDetailModalBtn.addEventListener('click', () => {
+            historyDetailModal.style.display = 'none';
+        });
+    }
+    
+    // モーダル外クリックで閉じる
+    if (historyDetailModal) {
+        historyDetailModal.addEventListener('click', (e) => {
+            if (e.target === historyDetailModal) {
+                historyDetailModal.style.display = 'none';
+            }
+        });
+    }
+    
+    // 復元ボタン
+    const restoreFromDetail = document.getElementById('restoreFromDetail');
+    if (restoreFromDetail) {
+        restoreFromDetail.addEventListener('click', restoreFromHistoryDetail);
+    }
+}
+
+// 履歴を保存
+async function saveToHistory(agent, files, prompt, outputPath, outputOption, generatedCommand) {
+    const historyItem = createHistoryItem(agent, files, prompt, outputPath, outputOption, generatedCommand);
+    
+    // 配列の先頭に追加（最新が一番上）
+    executionHistory.unshift(historyItem);
+    
+    // 最大件数を超えた場合は古いものを削除
+    if (executionHistory.length > MAX_HISTORY_ITEMS) {
+        executionHistory = executionHistory.slice(0, MAX_HISTORY_ITEMS);
+    }
+    
+    // Chrome Storage に保存
+    try {
+        await chrome.storage.local.set({ 'taskAgentsHistory': executionHistory });
+        console.log('📝 履歴を保存しました:', historyItem.id);
+    } catch (error) {
+        console.error('履歴保存エラー:', error);
+    }
+}
+
+// 履歴を読み込み
+async function loadExecutionHistory() {
+    try {
+        const result = await chrome.storage.local.get(['taskAgentsHistory']);
+        if (result.taskAgentsHistory) {
+            executionHistory = result.taskAgentsHistory;
+            console.log(`📋 ${executionHistory.length}件の履歴を読み込みました`);
+        }
+    } catch (error) {
+        console.error('履歴読み込みエラー:', error);
+        executionHistory = [];
+    }
+}
+
+// 履歴一覧を表示
+function loadHistoryList() {
+    const historyList = document.getElementById('historyList');
+    const noHistory = document.getElementById('noHistory');
+    
+    if (executionHistory.length === 0) {
+        historyList.innerHTML = '';
+        noHistory.style.display = 'block';
+        return;
+    }
+    
+    noHistory.style.display = 'none';
+    
+    historyList.innerHTML = executionHistory.map(item => {
+        const date = new Date(item.timestamp);
+        const formattedDate = date.toLocaleDateString('ja-JP', {
+            month: 'numeric',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const truncatedPrompt = item.prompt.length > 100 
+            ? item.prompt.substring(0, 100) + '...' 
+            : item.prompt;
+            
+        return `
+            <div class="history-item" data-history-id="${item.id}">
+                <div class="history-header">
+                    <div class="history-agent">🤖 ${item.agent.displayName}</div>
+                    <div class="history-date">📅 ${formattedDate}</div>
+                </div>
+                <div class="history-details">
+                    <div class="history-files">📁 ${item.files.length}個のファイル</div>
+                    <div class="history-prompt">${truncatedPrompt}</div>
+                </div>
+                <div class="history-actions">
+                    <button class="btn btn-secondary btn-small history-detail-btn" data-history-id="${item.id}">
+                        📋 詳細を見る
+                    </button>
+                    <button class="btn btn-primary btn-small history-restore-btn" data-history-id="${item.id}">
+                        🔄 復元
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // イベントリスナーを設定
+    setupHistoryItemEventListeners();
+}
+
+// 履歴アイテムのイベントリスナー設定
+function setupHistoryItemEventListeners() {
+    // 詳細ボタン
+    document.querySelectorAll('.history-detail-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const historyId = btn.dataset.historyId;
+            showHistoryDetail(historyId);
+        });
+    });
+    
+    // 復元ボタン
+    document.querySelectorAll('.history-restore-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const historyId = btn.dataset.historyId;
+            restoreFromHistory(historyId);
+        });
+    });
+}
+
+// 履歴詳細を表示
+function showHistoryDetail(historyId) {
+    const historyItem = executionHistory.find(item => item.id === historyId);
+    if (!historyItem) return;
+    
+    const modal = document.getElementById('historyDetailModal');
+    const modalBody = document.getElementById('historyDetailBody');
+    
+    const date = new Date(historyItem.timestamp);
+    const formattedDate = date.toLocaleString('ja-JP');
+    
+    modalBody.innerHTML = `
+        <div class="detail-section">
+            <h5>🤖 エージェント</h5>
+            <p><strong>${historyItem.agent.displayName}</strong></p>
+            <p class="text-muted">${historyItem.agent.description}</p>
+        </div>
+        
+        <div class="detail-section">
+            <h5>📅 実行日時</h5>
+            <p>${formattedDate}</p>
+        </div>
+        
+        <div class="detail-section">
+            <h5>📁 入力ファイル (${historyItem.files.length}個)</h5>
+            ${historyItem.files.map(file => `
+                <div class="file-detail">
+                    <div class="file-name">📄 ${file.name}</div>
+                    <div class="file-path text-muted">${file.path}</div>
+                    <div class="file-size text-muted">${formatFileSize(file.size)}</div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <div class="detail-section">
+            <h5>✏️ プロンプト</h5>
+            <pre class="prompt-detail">${historyItem.prompt}</pre>
+        </div>
+        
+        <div class="detail-section">
+            <h5>📤 出力先</h5>
+            <p>${historyItem.outputPath} (${getOutputOptionLabel(historyItem.outputOption)})</p>
+        </div>
+        
+        <div class="detail-section">
+            <h5>⚡ 生成されたコマンド</h5>
+            <pre class="command-detail">${historyItem.generatedCommand}</pre>
+        </div>
+    `;
+    
+    // 復元ボタンにhistoryIdを設定
+    const restoreBtn = document.getElementById('restoreFromDetail');
+    restoreBtn.dataset.historyId = historyId;
+    
+    modal.style.display = 'block';
+}
+
+// 履歴から復元
+function restoreFromHistory(historyId) {
+    const historyItem = executionHistory.find(item => item.id === historyId);
+    if (!historyItem) return;
+    
+    // エージェントタブに切り替え
+    const agentTab = document.getElementById('agentTab');
+    const historyTab = document.getElementById('historyTab');
+    const agentContent = document.getElementById('agentContent');
+    const historyContent = document.getElementById('historyContent');
+    switchTab('agent', agentTab, historyTab, agentContent, historyContent);
+    
+    // エージェントを選択
+    if (historyItem.agent.name) {
+        selectAgent(historyItem.agent.name);
+    }
+    
+    // ファイルを復元
+    selectedFiles = historyItem.files.map(file => ({
+        name: file.name,
+        path: file.path,
+        size: file.size,
+        restored: true
+    }));
+    displaySelectedFiles();
+    
+    // プロンプトを復元
+    document.getElementById('promptInput').value = historyItem.prompt;
+    
+    // 出力設定を復元
+    outputOption = historyItem.outputOption;
+    outputPath = historyItem.outputPath;
+    
+    // 出力オプションのラジオボタンを更新
+    const outputRadio = document.querySelector(`input[name="outputOption"][value="${outputOption}"]`);
+    if (outputRadio) {
+        outputRadio.checked = true;
+    }
+    
+    // 手動入力の場合、値を設定
+    if (outputOption === 'manual') {
+        document.getElementById('manualOutputPath').value = outputPath || '';
+    }
+    
+    updateOutputControls();
+    updateSelectedOutputDisplay();
+    
+    showStatus(`履歴から設定を復元しました: ${historyItem.agent.displayName}`, 'success');
+}
+
+// 詳細モーダルから復元
+function restoreFromHistoryDetail() {
+    const restoreBtn = document.getElementById('restoreFromDetail');
+    const historyId = restoreBtn.dataset.historyId;
+    
+    // モーダルを閉じる
+    document.getElementById('historyDetailModal').style.display = 'none';
+    
+    // 復元実行
+    restoreFromHistory(historyId);
+}
+
+// 出力オプションのラベルを取得
+function getOutputOptionLabel(option) {
+    switch(option) {
+        case 'folder': return 'フォルダ選択';
+        case 'manual': return '手動入力';
+        case 'same': return '入力ファイルと同じフォルダ';
+        default: return '不明';
+    }
 }
 
 // ユーティリティ関数

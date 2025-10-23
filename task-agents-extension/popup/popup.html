@@ -21,8 +21,20 @@
             </div>
         </div>
 
-        <!-- Agent Selection -->
-        <div class="section">
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button id="agentTab" class="tab-btn active">
+                🤖 エージェント選択
+            </button>
+            <button id="historyTab" class="tab-btn">
+                📜 実行履歴
+            </button>
+        </div>
+
+        <!-- Agent Content -->
+        <div id="agentContent" class="tab-content active">
+            <!-- Agent Selection -->
+            <div class="section">
             <h3>📋 1. エージェント選択</h3>
             <div id="agentList" class="agent-list">
                 <!-- エージェントリストが動的に生成される -->
@@ -109,6 +121,38 @@
                     <button id="copyBtn" class="btn btn-copy">📋 コピー</button>
                 </div>
                 <pre id="commandText" class="command-text"></pre>
+            </div>
+        </div>
+        </div>
+
+        <!-- History Content -->
+        <div id="historyContent" class="tab-content">
+            <div class="section">
+                <h3>📜 実行履歴</h3>
+                <div id="historyList" class="history-list">
+                    <!-- 履歴リストが動的に生成される -->
+                </div>
+                <div id="noHistory" class="no-history" style="display: none;">
+                    <p>🕐 まだ実行履歴がありません</p>
+                    <p>エージェントを実行すると、ここに履歴が表示されます。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Detail Modal -->
+        <div id="historyDetailModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>📋 実行履歴の詳細</h4>
+                    <button id="closeDetailModal" class="close-btn">×</button>
+                </div>
+                <div class="modal-body" id="historyDetailBody">
+                    <!-- 詳細内容が動的に生成される -->
+                </div>
+                <div class="modal-footer">
+                    <button id="restoreFromDetail" class="btn btn-primary">🔄 この設定を復元</button>
+                    <button id="closeDetailModalBtn" class="btn btn-secondary">閉じる</button>
+                </div>
             </div>
         </div>
 
