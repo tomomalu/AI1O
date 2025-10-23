@@ -179,6 +179,107 @@ function searchRecursive(dir, filename, maxDepth) {
     return null;
 }
 
+// フォルダパスを検索・解決する
+function findFolderPath(foldername) {
+    console.error(`🔍 Searching for folder: ${foldername}`);
+    
+    const commonPaths = [
+        '/Users/tomomalu/Desktop',
+        '/Users/tomomalu/Downloads',
+        '/Users/tomomalu/Documents',
+        '/Volumes/SSD-PROJECT/AI1O',
+        '/Volumes/SSD-PROJECT/AI1O/task-agents',
+        '/Volumes/SSD-PROJECT/AI1O/task-agents/output',
+        '/Volumes/SSD-PROJECT/AI1O/AI1O_org',
+        '/Volumes/SSD-PROJECT/AI1O/AI1O_org/output',
+        '/Volumes/SSD-PROJECT',
+        '/Users/tomomalu'
+    ];
+    
+    // まず高速検索（findコマンド）を試す
+    for (const basePath of commonPaths) {
+        try {
+            console.error(`🚀 Fast folder search in: ${basePath}`);
+            const findCommand = `find "${basePath}" -name "${foldername}" -type d 2>/dev/null | head -1`;
+            const result = execSync(findCommand, { encoding: 'utf8', timeout: 5000 }).trim();
+            
+            if (result && fs.existsSync(result)) {
+                console.error(`⚡ Found folder with find command: ${result}`);
+                return {
+                    success: true,
+                    path: result,
+                    type: 'folder'
+                };
+            }
+        } catch (error) {
+            console.error(`❌ Find command failed for ${basePath}: ${error.message}`);
+        }
+    }
+    
+    // findコマンドで見つからない場合は、再帰検索
+    console.error(`🔄 Fallback to recursive folder search`);
+    for (const basePath of commonPaths) {
+        try {
+            const result = searchRecursiveFolder(basePath, foldername, 10);
+            if (result) {
+                console.error(`🎯 Found folder recursively: ${result}`);
+                return {
+                    success: true,
+                    path: result,
+                    type: 'folder'
+                };
+            }
+        } catch (error) {
+            // 権限エラーなどは無視
+        }
+    }
+    
+    console.error(`❌ Folder not found: ${foldername}`);
+    return {
+        success: false,
+        error: `Folder "${foldername}" not found`,
+        type: 'folder'
+    };
+}
+
+// 再帰的にフォルダを検索（深度制限付き）
+function searchRecursiveFolder(dir, foldername, maxDepth) {
+    if (maxDepth <= 0) return null;
+    
+    try {
+        const items = fs.readdirSync(dir);
+        
+        // まず直接マッチするフォルダを探す
+        for (const item of items) {
+            if (item === foldername) {
+                const fullPath = path.join(dir, item);
+                const stats = fs.statSync(fullPath);
+                if (stats.isDirectory()) {
+                    return fullPath;
+                }
+            }
+        }
+        
+        // 次にサブディレクトリを探す
+        for (const item of items) {
+            const fullPath = path.join(dir, item);
+            try {
+                const stats = fs.statSync(fullPath);
+                if (stats.isDirectory() && !item.startsWith('.')) {
+                    const result = searchRecursiveFolder(fullPath, foldername, maxDepth - 1);
+                    if (result) return result;
+                }
+            } catch (error) {
+                // 権限エラーなどは無視
+            }
+        }
+    } catch (error) {
+        // ディレクトリ読み取りエラーは無視
+    }
+    
+    return null;
+}
+
 // ---- メインループ ----
 // 起動ログをファイルにも記録
 const logFile = '/tmp/native-host.log';
@@ -197,6 +298,10 @@ try {
     if (msg.action === 'getFilePath') {
       const result = findFilePath(msg.filename, msg.searchPaths || []);
       fs.appendFileSync(logFile, `📤 Sending: ${JSON.stringify(result)}\n`);
+      sendMessage(result);
+    } else if (msg.action === 'getFolderPath') {
+      const result = findFolderPath(msg.foldername);
+      fs.appendFileSync(logFile, `📤 Folder result: ${JSON.stringify(result)}\n`);
       sendMessage(result);
     } else {
       const errorResponse = {

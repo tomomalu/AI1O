@@ -26,23 +26,32 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     console.log('Background received message:', msg);
     
-    if (msg.action === "getFilePathFromNative") {
+    if (msg.action === "getFilePathFromNative" || msg.action === "getFolderPathFromNative") {
         try {
             console.log("Attempting to connect to native host...");
             const port = chrome.runtime.connectNative("com.taskagents.pathhost");
             console.log("Port created:", port);
             
-            const message = { 
-                action: 'getFilePath',
-                filename: msg.filename,
-                searchPaths: msg.searchPaths || [
-                    '/Users/tomomalu/Desktop',
-                    '/Users/tomomalu/Downloads',
-                    '/Users/tomomalu/Documents',
-                    '/Volumes/SSD-PROJECT/AI1O/task-agents/output',
-                    '/Volumes/SSD-PROJECT/AI1O/project'
-                ]
-            };
+            let message;
+            if (msg.action === "getFilePathFromNative") {
+                message = { 
+                    action: 'getFilePath',
+                    filename: msg.filename,
+                    searchPaths: msg.searchPaths || [
+                        '/Users/tomomalu/Desktop',
+                        '/Users/tomomalu/Downloads',
+                        '/Users/tomomalu/Documents',
+                        '/Volumes/SSD-PROJECT/AI1O/task-agents/output',
+                        '/Volumes/SSD-PROJECT/AI1O/project'
+                    ]
+                };
+            } else if (msg.action === "getFolderPathFromNative") {
+                console.log("Getting folder path for:", msg.foldername);
+                message = {
+                    action: 'getFolderPath',
+                    foldername: msg.foldername
+                };
+            }
             console.log("Sending message to native host:", message);
             port.postMessage(message);
             

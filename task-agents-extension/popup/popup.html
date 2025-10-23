@@ -58,9 +58,41 @@
                       placeholder="エージェントを選択するとテンプレートが自動入力されます..."></textarea>
         </div>
 
+        <!-- Output Path Selection -->
+        <div class="section">
+            <h3>📤 4. 出力先選択</h3>
+            <div class="output-selection">
+                <div class="output-options">
+                    <label class="radio-option">
+                        <input type="radio" name="outputOption" value="folder" id="outputFolder">
+                        <span class="radio-text">📁 フォルダを選択</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="outputOption" value="same" id="outputSame" checked>
+                        <span class="radio-text">📍 入力ファイルと同じフォルダ</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="outputOption" value="manual" id="outputManual">
+                        <span class="radio-text">✏️ パスを手動入力</span>
+                    </label>
+                </div>
+                
+                <div class="output-controls">
+                    <button id="selectFolderBtn" class="btn btn-secondary" style="display: none;">
+                        📂 フォルダ選択
+                    </button>
+                    <div class="manual-output-path" style="display: none;">
+                        <input type="text" id="manualOutputPath" class="path-input" 
+                               placeholder="例: /Users/tomomalu/Desktop/output">
+                    </div>
+                    <div id="selectedOutputPath" class="selected-output"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Command Generation -->
         <div class="section">
-            <h3>⚡ 4. 実行コマンド</h3>
+            <h3>⚡ 5. 実行コマンド</h3>
             <button id="generateBtn" class="btn btn-success">
                 🚀 コマンド生成
             </button>
