@@ -310,11 +310,16 @@ function getAgents() {
                 if (fs.existsSync(readmePath)) {
                     try {
                         const content = fs.readFileSync(readmePath, 'utf8');
+                        // プロンプトテンプレート部分を抽出
+                        const template = extractPromptTemplate(content);
+                        const displayName = extractDisplayName(content) || item.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        const description = extractDescription(content) || `${item} エージェント`;
+                        
                         agents.push({
                             name: item,
-                            displayName: item.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                            description: `${item} エージェント`,
-                            template: content,
+                            displayName: displayName,
+                            description: description,
+                            template: template,
                             type: 'folder'
                         });
                         console.error(`✅ Loaded folder agent: ${item}`);
@@ -327,11 +332,17 @@ function getAgents() {
                 try {
                     const content = fs.readFileSync(itemPath, 'utf8');
                     const agentName = item.replace('.md', '');
+                    
+                    // プロンプトテンプレート部分を抽出
+                    const template = extractPromptTemplate(content);
+                    const displayName = extractDisplayName(content) || agentName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const description = extractDescription(content) || `${agentName} エージェント`;
+                    
                     agents.push({
                         name: agentName,
-                        displayName: agentName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                        description: `${agentName} エージェント`,
-                        template: content,
+                        displayName: displayName,
+                        description: description,
+                        template: template,
                         type: 'file'
                     });
                     console.error(`✅ Loaded file agent: ${agentName}`);
@@ -356,6 +367,53 @@ function getAgents() {
             agents: []
         };
     }
+}
+
+// README.mdからプロンプトテンプレートを抽出
+function extractPromptTemplate(content) {
+    // シンプルなテンプレートプレースホルダーを返す
+    // エージェントファイルは説明文であり、プロンプトテンプレートは別途用意
+    return `このエージェントへの指示を入力してください。
+
+例:
+- 分析したい内容や課題
+- 期待する成果物
+- 考慮すべき条件や制約
+
+詳細な指示を記述してください:`;
+}
+
+// README.mdから表示名を抽出
+function extractDisplayName(content) {
+    const lines = content.split('\n');
+    for (const line of lines) {
+        if (line.startsWith('displayName:')) {
+            return line.replace('displayName:', '').trim();
+        }
+        if (line.startsWith('name:')) {
+            const name = line.replace('name:', '').trim();
+            return name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+    }
+    return null;
+}
+
+// README.mdから説明を抽出
+function extractDescription(content) {
+    const lines = content.split('\n');
+    for (const line of lines) {
+        if (line.startsWith('description:')) {
+            let description = line.replace('description:', '').trim();
+            // \n を改行に変換
+            description = description.replace(/\\n/g, '\n');
+            // 長すぎる場合は短縮
+            if (description.length > 100) {
+                description = description.substring(0, 100) + '...';
+            }
+            return description;
+        }
+    }
+    return null;
 }
 
 // ---- メインループ ----

@@ -136,10 +136,11 @@ function selectAgent(agentName) {
     // ラジオボタンをチェック
     document.querySelector(`input[value="${agentName}"]`).checked = true;
     
-    // プロンプトテンプレートを自動入力
+    // プロンプトテンプレートを表示（ユーザーが編集可能）
     const agent = availableAgents.find(a => a.name === agentName);
     if (agent) {
         document.getElementById('promptInput').value = agent.template;
+        document.getElementById('promptInput').placeholder = `${agent.displayName}への指示を入力してください...`;
         showStatus(`${agent.displayName} を選択しました`, 'success');
     }
 }
