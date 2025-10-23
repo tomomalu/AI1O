@@ -1,5 +1,5 @@
 ---
-name: task-ui-sketch-creator
+name: ui-sketch-creator
 description: 企画書からUIラフスケッチと画面遷移図を作成する専門エージェントです。既存の企画書を元に、主要画面の構成と導線を詳細に設計します。
 ---
 
@@ -38,7 +38,7 @@ description: 企画書からUIラフスケッチと画面遷移図を作成す�
 - アクセシビリティ考慮事項の記載
 
 ## ファイル作成・編集ルール
-- 新たに作成する全てのファイルは、「output/task-ui-sketch-creator/[YYYYMMDD_プロジェクト名]」フォルダ内に配置
+- 新たに作成する全てのファイルは、「output/ui-sketch-creator/[YYYYMMDD_プロジェクト名]」フォルダ内に配置
 - 作業のための一時ファイルは「tmp」フォルダに保存
 - 他のフォルダのファイルは編集しない
 
